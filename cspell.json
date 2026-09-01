@@ -1,0 +1,27 @@
+{
+  "version": "0.2",
+  "language": "en-GB",
+  "dictionaries": ["en-gb", "softwareTerms", "python"],
+  "words": [
+    "backtest",
+    "backtesting",
+    "pyproject",
+    "pytest",
+    "riskengine",
+    "ruff"
+  ],
+  "flagWords": [
+    "organization",
+    "behavior",
+    "license:licence",
+    "color:colour",
+    "analyze:analyse"
+  ],
+  "ignorePaths": [
+    ".git/**",
+    ".venv/**",
+    "**/__pycache__/**",
+    ".ruff_cache/**",
+    ".pytest_cache/**"
+  ]
+}
