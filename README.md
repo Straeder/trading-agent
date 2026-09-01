@@ -34,6 +34,7 @@ and run in CI on every push.
 
 ```
 specs/                  Authoritative specifications (SDD source of truth)
+  constitution.md       Project-wide principles, standards and guardrails
   risk-engine-spec.md   Risk engine spec: mandate, R1/R2/R3, escalation,
                         audit log, paper-trading validation, backtesting
 docs/adr/               Architecture Decision Records
