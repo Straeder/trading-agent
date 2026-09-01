@@ -35,9 +35,12 @@ and run in CI on every push.
 ```
 specs/                  Authoritative specifications (SDD source of truth)
   constitution.md       Project-wide principles, standards and guardrails
+  capabilities.md       Capability map C1-C9 with out-of-scope list
+  plan.md / tasks.md    Technical plan (ports and adapters) and task breakdown
   risk-engine-spec.md   Risk engine spec: mandate, R1/R2/R3, escalation,
                         audit log, paper-trading validation, backtesting
-docs/adr/               Architecture Decision Records
+docs/adr/               Architecture Decision Records (0001-0004)
+docs/redteam/           Adversarial reviews; findings feed spec revisions
   adr-template.md       Template for new ADRs
   adr-0001-*.md         The risk-engine-first decision
 src/riskengine/         The governed risk engine (architectural core)

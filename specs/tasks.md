@@ -19,9 +19,10 @@
   _Depends: T-002_
 - **T-008** Decision-cycle orchestrator wiring ports together; integration
   test of one full EOD cycle with stub data. _Depends: T-003…T-007_
-- **T-009** ADR-0002 market data source, then MarketDataPort adapter.
+- **T-009** MarketDataPort manual-ingestion adapter incl. plausibility checks (ADR-0002 accepted).
   _Depends: T-008_
-- **T-010** ADR-0003 notification channel, then adapter. _Depends: T-006_
+- **T-010** File inbox/outbox notification adapter (ADR-0003 accepted). _Depends: T-006_
+- **T-011** Baseline strategy adapter per ADR-0004 behind ProposalPort. _Depends: T-008_
 
 Out of scope for this breakdown: proposal generation (ADR-0004), backtesting,
 validation reporting — these follow once spec §§5–6 are fully specified.

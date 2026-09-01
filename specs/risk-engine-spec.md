@@ -1,86 +1,94 @@
 # Risk Engine Specification
 
-> **Status:** Draft v0.1 — populated with industry-standard defaults.
-> Values marked **[DEFAULT]** are conventional starting points for a small,
-> long-only, single-owner portfolio; the owner may override any of them by
-> editing this spec (spec first, code second).
+> **Status:** v0.2 — red-team findings F-01..F-15 incorporated
+> (see `docs/redteam/redteam-v0.1.md`). Values marked **[DEFAULT]** are
+> owner-overridable; spec first, code second.
 
-**Scope (v0.1):** AEX constituents only · paper trading with €10,000 virtual
-capital · end-of-day decision cadence · long-only cash equities.
+**Scope (v0.1 system):** AEX constituents only · paper trading, €10,000
+virtual capital · end-of-day cadence · long-only, EUR-denominated cash
+equities. Market times are CET/CEST (Euronext); all logged timestamps are
+UTC (F-03).
 
 ---
 
 ## 1. Mandate
 
-The risk engine is the sole gatekeeper between trade proposals and execution.
-
-- M1. The system shall trade only ordinary shares of current AEX constituents.
-- M2. The system shall be long-only; short positions and derivatives are
-  prohibited.
-- M3. The system shall use no leverage; total invested capital shall never
-  exceed available virtual cash.
+- M1. The system shall **buy** only EUR-denominated ordinary shares of
+  current AEX constituents (F-15). A held instrument that leaves the index
+  becomes **legacy**: hold or sell only, flagged in reporting (F-08).
+- M2. The system shall be long-only; shorts and derivatives are prohibited.
+  A SELL exceeding the held quantity shall be classified R3 (F-09).
+- M3. No leverage: projected cash after all approved orders of a cycle shall
+  never be negative.
 - M4. **[DEFAULT]** A single position shall not exceed **10%** of portfolio
-  value at the time of order creation.
+  value at classification time.
 - M5. **[DEFAULT]** A single order shall not exceed **5%** of portfolio value.
-- M6. **[DEFAULT]** The portfolio shall hold a cash buffer of at least **10%**
-  of portfolio value after any proposed order.
-- M7. The owner may halt all activity at any time (kill switch); a halt takes
-  precedence over every other rule.
-- M8. When any input required for classification is missing, stale, or
-  inconsistent, the system shall take no action and raise an R3 event.
+- M6. **[DEFAULT]** Projected cash after the cycle's orders shall be at least
+  **10%** of portfolio value.
+- M7. The owner may halt all activity at any time; a halt takes precedence
+  over every rule. HaltState is persisted; on restart, if persisted state
+  and the audit log disagree, the system boots **halted** (F-04).
+- M8. Data integrity: prices older than the last completed Euronext trading
+  day, missing prices for any held or proposed instrument, missing
+  constituent data, or a failed plausibility check (±20% day-on-day move
+  without a known corporate action, F-13) shall raise R3 and block all
+  market action.
+- M9. Any corporate action affecting a held instrument shall raise R3;
+  position adjustments are made only after owner approval and are logged
+  (F-07).
 
 ## 2. Risk Classification (R1 / R2 / R3)
 
-Every trade proposal and every end-of-day portfolio state shall be classified
-before any action is taken.
-
-- **R1 — within mandate.** The proposal breaches no limit and no metric is in
-  the warning band. The system shall execute autonomously (paper) and log the
-  decision.
-- **R2 — approaching a limit.** **[DEFAULT]** Any metric at or above **80%**
-  of its limit (e.g. position at ≥ 8% of portfolio value, daily loss at
-  ≥ 1.6%). The system shall either (a) reduce the proposal so all metrics
-  return below the warning band, or (b) escalate; it shall never execute the
-  original proposal unchanged.
-- **R3 — breach or hazard.** Any of: a limit would be breached; **[DEFAULT]**
-  daily portfolio loss ≥ **2%**; **[DEFAULT]** drawdown from peak ≥ **10%**;
-  data integrity failure (M8); kill switch active. The system shall take no
-  market action and shall escalate to the owner.
-
-Reclassification: classifications are computed fresh each decision cycle;
-no class is sticky except an R3 halt, which persists until the owner clears it.
+- Classification is computed fresh each cycle over the **joint** set of
+  proposals: metrics are evaluated against the projected post-trade
+  portfolio of the entire cycle, not per proposal in isolation (F-10).
+- **R1 — within mandate.** No limit breached, no metric in the warning band:
+  execute autonomously (paper) and log.
+- **R2 — approaching a limit.** **[DEFAULT]** Any metric at ≥ **80%** of its
+  limit. The engine shall reduce the proposal set until all metrics are
+  below the band, or escalate; never execute unchanged.
+- **R3 — breach or hazard.** Any limit breach; **[DEFAULT]** daily loss of
+  total portfolio value ≥ **2%**; **[DEFAULT]** drawdown ≥ **10%** from the
+  peak of total EOD portfolio value since inception (F-12); any M7/M8/M9
+  event. No market action; escalate.
+- An R3 halt is sticky until explicitly cleared by the owner (E4).
 
 ## 3. Escalation Protocol
 
-- E1. When a proposal or state is classified R3, the system shall notify the
-  owner with: trigger, metric values, limit values, and the proposed action.
-- E2. The system shall proceed only after explicit owner approval recorded in
-  the audit log.
-- E3. When no owner response is received before the next decision cycle, the
-  system shall take no action (fail-safe) and repeat the notification.
-- E4. De-escalation: an R3 halt is cleared only by an explicit owner decision,
-  which shall itself be logged.
+- E1. Every R3 event shall be notified with: a stable event ID, trigger,
+  metric and limit values, and the proposed action.
+- E2. Market action after R3 requires an explicit, logged owner approval
+  referencing the event ID.
+- E3. No response before the next cycle ⇒ no action; re-notification reuses
+  the same event ID so repeats are deduplicated (F-11).
+- E4. De-escalation only by explicit, logged owner decision.
 
 ## 4. Audit Log
 
-- A1. The system shall log every proposal, classification, decision,
-  escalation, owner response, and configuration change.
-- A2. Each entry shall record: UTC timestamp, event type, inputs (metric and
+- A1. Log every ingest (with provenance), proposal, classification,
+  decision, escalation, owner response, halt change and config change.
+- A2. Each entry records: UTC timestamp, event type, inputs (metric and
   limit values), outcome, and the git revision of the spec in force.
-- A3. The log shall be append-only (JSON Lines); entries are never edited or
-  deleted.
-- A4. The log shall be sufficient to reconstruct every decision without access
-  to any other system state.
+- A3. Append-only JSON Lines with a **hash chain**: every entry contains the
+  SHA-256 of the previous entry; verification failure ⇒ boot halted (F-05).
+- A4. The log alone suffices to reconstruct every decision.
 
 ## 5. Paper-Trading Validation
 
-_To be specified in detail._ **[DEFAULT]** outline: minimum **3 months** of
-end-of-day paper trading; success requires zero unlogged decisions, zero
-mandate breaches, and every R3 correctly escalated. Any mandate breach aborts
-validation.
+- V1. **[DEFAULT]** Minimum **3 months** of EOD paper trading.
+- V2. Success criteria are governance metrics, not returns: 100% of
+  decisions logged and hash-chain verified; zero mandate breaches; every
+  R3 escalated and resolved per §3; zero unexplained state changes.
+- V3. Any mandate breach or audit-chain failure aborts validation; restart
+  requires a spec revision and owner sign-off.
+- V4. An EOD summary report is delivered to the owner each cycle (C8).
 
 ## 6. Backtest Methodology
 
-_To be specified in detail._ Constraints already fixed by this spec:
-end-of-day data only, AEX constituents with survivorship-bias-free membership
-history, no look-ahead, and transaction costs modelled conservatively.
+- B1. EOD closes only; AEX membership history free of survivorship bias.
+- B2. No look-ahead: signals from close T, fills at close T+1 — identical to
+  live paper timing (ADR-0004).
+- B3. **[DEFAULT]** Costs: **0.15%** per trade plus **0.10%** spread proxy,
+  applied to every simulated fill.
+- B4. Backtests report governance metrics (breaches, R2/R3 frequency,
+  escalations) alongside performance, against the same spec revision.
