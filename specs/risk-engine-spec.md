@@ -50,7 +50,7 @@ UTC (F-03).
   limit. The engine shall reduce the proposal set until all metrics are
   below the band, or escalate; never execute unchanged.
 - **R3 — breach or hazard.** Any limit breach; **[DEFAULT]** daily loss of
-  total portfolio value ≥ **2%**; **[DEFAULT]** drawdown ≥ **10%** from the
+  total portfolio value ≥ **2%**; drawdown ≥ **10%** (owner-ratified 2026-09-02) from the
   peak of total EOD portfolio value since inception (F-12); any M7/M8/M9
   event. No market action; escalate.
 - An R3 halt is sticky until explicitly cleared by the owner (E4).
