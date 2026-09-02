@@ -26,3 +26,11 @@ rationale.
 **Conclusion:** no finding invalidates the risk-engine-first architecture;
 F-01, F-04, F-05, F-09 and F-10 were material spec defects and are fixed in
 spec v0.2 before any further implementation (spec first, code second).
+
+## Live findings from cycle 1 (2026-09-02)
+
+| ID | Sev | Finding | Resolution |
+| --- | --- | --- | --- |
+| F-16 | M | M5 order cap (5% = €500) sits below the 7.5% ADR-0004 target weight, blocking a one-day build-out. | Two-phase build-out: ≤5% orders in cycle 1, top-up to 7.5% in a later cycle. Letter- and spirit-compliant; no spec change. |
+| F-17 | M | Whole-share minimum tickets make ASML (€1,435.40), Adyen (€1,006.80) and ASMI (€786.00) uninvestable at €10,000 capital under M4/M5 — the index's largest name is excluded by the mandate itself. | Replaced by next-ranked UMG and NN; consequence (tracking error vs AEX) reported to owner. Owner options: accept, raise virtual capital, or specify fractional shares in a spec revision. |
+| F-18 | L | Ad-hoc web sources serve cached pages with mixed dates; a first fetch presented day-old intraday data as current. | Caught by the M8 cross-check (index close verified across two sources). Reinforces ADR-0002 provenance + plausibility requirements. |
