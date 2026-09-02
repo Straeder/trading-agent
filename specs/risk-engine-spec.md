@@ -84,6 +84,12 @@ UTC (F-03).
 - V3. Any mandate breach or audit-chain failure aborts validation; restart
   requires a spec revision and owner sign-off.
 - V4. An EOD summary report is delivered to the owner each cycle (C8).
+- V5. Objective hierarchy (owner direction, 2026-09-02): profit is the
+  long-term goal; risk constraints always dominate the return objective,
+  never the reverse. Performance is reported against the AEX Gross Return
+  index net of costs (B3). Outperformance is NOT a v0.1 success
+  criterion; making it one requires a specified edge hypothesis and its
+  own falsifiable test in a future spec revision.
 
 ## 6. Backtest Methodology
 
