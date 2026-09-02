@@ -24,3 +24,7 @@ institutional memory; a lesson that is not written down does not exist.
 - **L-06 (cycle 1):** the escalation path was never exercised because the
   build-out was engineered to be R1. A validation criterion should force
   at least one deliberate R3 drill before real money (add to V-checks).
+- **L-07 (repo migration):** invisible files *are* the history. Moving a
+  repository via a graphical file manager silently drops `.git`,
+  `.github` and `.gitignore`; always migrate with `unzip`/`cp -a` in a
+  terminal, and verify with `git log` plus the audit-chain check.
