@@ -32,7 +32,9 @@ UTC (F-03).
   day, missing prices for any held or proposed instrument, missing
   constituent data, or a failed plausibility check (±20% day-on-day move
   without a known corporate action, F-13) shall raise R3 and block all
-  market action.
+  market action. Prices are valid only when confirmed by at least 2 of 3
+  independent sources; unexplained divergence between sources shall raise
+  R3 (ADR-0005).
 - M9. Any corporate action affecting a held instrument shall raise R3;
   position adjustments are made only after owner approval and are logged
   (F-07).
